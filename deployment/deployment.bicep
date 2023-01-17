@@ -1,6 +1,9 @@
+@description('random unique string')
+param unique_id string = uniqueString(resourceGroup().id)
+
 @description('Web app name.')
 @minLength(2)
-param webAppName string = 'CallAutomation-${uniqueString(resourceGroup().id)}'
+param webAppName string = 'CallAutomation-${unique_id}'
 
 @description('Location for all resources.')
 param location string = resourceGroup().location
@@ -27,10 +30,10 @@ param sku string = 'F1'
 param language string = '.net'
 
 @description('Git Repo URL')
-param repoUrl string = 'https://github.com/moirf/communication-services-dotnet-quickstarts/tree/main/ServerRecording'
+param repoUrl string = 'https://github.com/moirf/communication-services-callautomation-hero'
 
-var appServicePlanName = 'Asp-${webAppName}'
-var gitRepoUrl = 'https://github.com/Azure-Samples/dotnetcore-docs-hello-world'
+var appServicePlanName = 'Asp-${unique_id}'
+var gitRepoUrl = repoUrl
 var configReference = {
   '.net': {
     comments: '.Net app. No additional configuration needed.'
@@ -81,12 +84,12 @@ resource gitsource 'Microsoft.Web/sites/sourcecontrols@2022-03-01' = {
   name: 'web'
   properties: {
     repoUrl: gitRepoUrl
-    branch: 'master'
+    branch: 'main'
     isManualIntegration: true
   }
 }
 
-param acs_name string = 'acs-callautomation-hero'
+param acs_name string = 'acs-resource-${unique_id}'
 param acs_location string = 'global'
 resource acs_resource 'Microsoft.Communication/communicationServices@2020-08-20' = {
   name: acs_name
