@@ -36,13 +36,10 @@ jobs:
       - build-client
     with:
       environmentType: Test
-      resourceGroupName: TestWeb
-      reviewApiUrl: https://call-automation-sample-test.azurewebsites.net/api
+      resourceGroupName: rg-acs-qa
+      appUrl: https://callautomation.azurewebsites.net
     secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_TEST }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      reviewApiKey: ${{ secrets.REVIEW_API_KEY_TEST }}
+      APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
 
   # Deploy to the production environment.
   production-deployment:
@@ -50,10 +47,7 @@ jobs:
     needs: test-deployment
     with:
       environmentType: Production
-      resourceGroupName: ProductionWeb
-      reviewApiUrl: https://call-automation-sample.azurewebsites.net/api
+      resourceGroupName: rg-acs-qa
+      reviewApiUrl: https://callautomation.azurewebsites.net
     secrets:
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_PRODUCTION }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      reviewApiKey: ${{ secrets.REVIEW_API_KEY_PRODUCTION }}
+      APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
