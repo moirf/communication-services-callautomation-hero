@@ -1,0 +1,47 @@
+name: e2e flow for call automation server client deployment...
+concurrency: call-automation-sample
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+
+  # Lint the Bicep file.
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  # Deploy to the test environment.
+  test-deployment:
+    uses: ./.github/workflows/deployment.yml
+    needs: lint
+    with:
+      environmentType: Test
+      resourceGroupName: TestWeb
+      reviewApiUrl: https://call-automation-sample-test.azurewebsites.net/api
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_TEST }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      reviewApiKey: ${{ secrets.REVIEW_API_KEY_TEST }}
+
+  # Deploy to the production environment.
+  production-deployment:
+    uses: ./.github/workflows/deployment.yml
+    needs: test-deployment
+    with:
+      environmentType: Production
+      resourceGroupName: ProductionWeb
+      reviewApiUrl: https://call-automation-sample.azurewebsites.net/api
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_PRODUCTION }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      reviewApiKey: ${{ secrets.REVIEW_API_KEY_PRODUCTION }}
