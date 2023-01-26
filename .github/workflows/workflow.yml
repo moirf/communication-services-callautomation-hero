@@ -36,7 +36,6 @@ jobs:
       - build-client
     with:
       environmentType: Test
-      resourceGroupName: rg-acs-qa
       appUrl: https://callautomation.azurewebsites.net
     secrets:
       APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
@@ -47,7 +46,6 @@ jobs:
     needs: test-deployment
     with:
       environmentType: Production
-      resourceGroupName: rg-acs-qa
       appUrl: https://callautomation.azurewebsites.net
     secrets:
       APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
