@@ -6,7 +6,7 @@ on:
       environmentType:
         required: true
         type: string
-      reviewApiUrl:
+      appUrl:
         required: true
         type: string
     secrets:

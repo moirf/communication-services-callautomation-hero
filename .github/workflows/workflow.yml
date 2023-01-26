@@ -48,6 +48,6 @@ jobs:
     with:
       environmentType: Production
       resourceGroupName: rg-acs-qa
-      reviewApiUrl: https://callautomation.azurewebsites.net
+      appUrl: https://callautomation.azurewebsites.net
     secrets:
       APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
