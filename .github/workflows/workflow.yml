@@ -20,11 +20,11 @@ jobs:
 
   # Build the server app
   build-server:
-    uses: ./.github/workflow/build-server.yml
+    uses: ./.github/workflows/build-server.yml
 
   # Build the client app
   build-client:
-    uses: ./.github/workflow/build-client.yml
+    uses: ./.github/workflows/build-client.yml
 
 
   # Deploy to the test environment.
