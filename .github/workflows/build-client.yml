@@ -7,16 +7,14 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [16.x, 18.x]
+    env:
+      NODE_VERSION: 18.x
 
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js $NODE_VERSION
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: $NODE_VERSION
       - run: npm run build --if-present
       - run: npm test
