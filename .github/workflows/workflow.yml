@@ -18,10 +18,22 @@ jobs:
   lint:
     uses: ./.github/workflows/lint.yml
 
+  # Build the server app
+  build-server:
+    uses: ./.github/workflow/build-server.yml
+
+  # Build the client app
+  build-client:
+    uses: ./.github/workflow/build-client.yml
+
+
   # Deploy to the test environment.
   test-deployment:
     uses: ./.github/workflows/deployment.yml
-    needs: lint
+    needs:
+      - lint
+      - build-server
+      - build-client
     with:
       environmentType: Test
       resourceGroupName: TestWeb
