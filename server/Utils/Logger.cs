@@ -19,26 +19,14 @@ namespace CallAutomationHero.Server
         /// </summary>
         /// <param name="messageType">Type of the message: Information or Error</param>
         /// <param name="message">Message string</param>
-        private static void LogMessage(MessageType messageType, string message)
-        {
-            if (messageType == MessageType.ERROR)
-            {
-                _logger!.LogError(message);
-            }
-            else
-            {
-                _logger!.LogInformation(message);
-            }
-        }
-
         public static void LogInformation(string message)
         {
-            LogMessage(MessageType.INFORMATION, message);
+            _logger!.LogInformation(message);
         }
 
         public static void LogError(string message)
         {
-            LogMessage(MessageType.ERROR, message);
+            _logger!.LogError(message);
         }
     }
 

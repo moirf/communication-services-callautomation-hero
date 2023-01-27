@@ -1,6 +1,5 @@
 import React from "react";
-import { CallClient, LocalVideoStream, Features, CallCommon } from '@azure/communication-calling';
-import { utils } from "../Utils/Utils";
+import { CallClient, LocalVideoStream, Features } from '@azure/communication-calling';
 import { AzureCommunicationTokenCredential } from '@azure/communication-common';
 import {
     PrimaryButton,
@@ -33,7 +32,6 @@ export default class MakeCall extends React.Component {
         this.callError = null;
         this.logBuffer = [];
         this.tokenCredential = null;
-        this.callCommon = null;
 
         this.state = {
             id: undefined,
@@ -76,7 +74,6 @@ export default class MakeCall extends React.Component {
                 this.callClient = new CallClient({ diagnostics: { appName: 'azure-communication-services', appVersion: '1.3.1-beta.1', tags: ["javascript_calling_sdk", `#clientTag:${userDetails.clientTag}`] } });
                 this.environmentInfo = await this.callClient.getEnvironmentInfoInternal();
                 this.callAgent = await this.callClient.createCallAgent(tokenCredential, { displayName: userDetails.displayName });
-                this.callCommon = new CallCommon({ diagnostics: { appName: 'azure-communication-services', appVersion: '1.3.1-beta.1', tags: ["javascript_calling_sdk", `#clientTag:${userDetails.clientTag}`] } });
                 // override logger to be able to dowload logs locally
                 AzureLogger.log = (...args) => {
                     this.logBuffer.push(...args);
@@ -249,10 +246,6 @@ export default class MakeCall extends React.Component {
             console.error('Failed to join teams meeting:', e);
             this.setState({ callError: 'Failed to join teams meeting: ' + e });
         }
-    }
-
-    sendDTMFTone = (dtmfTone) => {
-        this.callCommon.sendDTMFTone(dtmfTone);
     }
 
     async getCallOptions(withVideo) {
@@ -947,7 +940,6 @@ this.deviceManager.on('selectedSpeakerChanged', () => { console.log(this.deviceM
                                 onShowCameraNotFoundWarning={(show) => { this.setState({ showCameraNotFoundWarning: show }) }}
                                 onShowSpeakerNotFoundWarning={(show) => { this.setState({ showSpeakerNotFoundWarning: show }) }}
                                 onShowMicrophoneNotFoundWarning={(show) => { this.setState({ showMicrophoneNotFoundWarning: show }) }}
-                                sendDtmf={this.sendDTMFTone}
                             />
                         }
                         {
