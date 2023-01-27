@@ -37,14 +37,37 @@ namespace CallAutomationHero.Server
                 }
                 else if (eventData is AcsRecordingFileStatusUpdatedEventData acsRecordingFileStatusUpdatedEventData)
                 {
-                    var recordingDownloadUri = new Uri(acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].ContentLocation);
-                    var downloadRespose = await _callAutomationClient.GetCallRecording().DownloadStreamingAsync(recordingDownloadUri);
+                    try
+                    {
+                        var recordingDownloadUri = new Uri(acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].ContentLocation);
+                        var downloadRespose = await _callAutomationClient.GetCallRecording().DownloadStreamingAsync(recordingDownloadUri);
+                        var containerName = _configuration["BlobContainerName"];
 
-                    string filePath = $".\\recording\\{acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].DocumentId}.mp4";
-                    using Stream readFromStream = downloadRespose.Value;
-                    using Stream writeToStream = System.IO.File.Open(filePath, FileMode.Create);
-                    await readFromStream.CopyToAsync(writeToStream);
-                    await writeToStream.FlushAsync();
+                        string filePath = $".\\recording\\{acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].DocumentId}.mp4";
+                        using Stream readFromStream = downloadRespose.Value;
+                        using Stream writeToStream = System.IO.File.Open(filePath, FileMode.Create);
+                        await readFromStream.CopyToAsync(writeToStream);
+                        await writeToStream.FlushAsync();
+
+                        Logger.LogInformation($"Starting to upload .mp4 to BlobStorage into container -- > {containerName}");
+
+                        var blobStorageHelperInfo = await BlobStorageHelper.UploadFileAsync(_configuration["BlobStorageConnectionString"], containerName, filePath, filePath);
+                        if (blobStorageHelperInfo.Status)
+                        {
+                            Logger.LogInformation(blobStorageHelperInfo.Message);
+                            Logger.LogInformation($"Deleting temporary .mp4 file being created");
+                            System.IO.File.Delete(filePath);
+                        }
+                        else
+                        {
+                            Logger.LogError($".mp4 file was not uploaded,{blobStorageHelperInfo.Message}");
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Logger.LogError($"Failed to upload the file. error message,{ex.Message}");
+                    }
+                    
                 }
             }
             return Results.Ok();
