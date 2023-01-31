@@ -57,11 +57,17 @@ namespace CallAutomationHero.Server
 
         public async Task<IResult> HandleCallback(CloudEvent[] cloudEvents, string callerId)
         {
+            CallConnection? callConnection = null;
+
             foreach (var cloudEvent in cloudEvents)
             {
                 var @event = CallAutomationEventParser.Parse(cloudEvent);
                 Logger.LogInformation($"Event received: {JsonConvert.SerializeObject(@event)}");
-                var callConnection = _callAutomationClient.GetCallConnection(@event.CallConnectionId);
+
+                if(callConnection == null)
+                {
+                    callConnection = _callAutomationClient.GetCallConnection(@event.CallConnectionId);
+                }
 
                 if (@event is CallConnected)
                 {
