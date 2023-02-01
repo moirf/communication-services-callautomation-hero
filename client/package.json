@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "webpack-dev-server --port 5000 --mode development",
-    "build": "webpack --openssl-legacy-provider --mode development"
+    "build": "webpack --openssl-legacy-provider --mode production"
   },
   "devDependencies": {
     "@babel/core": "^7.8.7",
