@@ -1,14 +1,11 @@
-﻿using Azure.Communication;
-using Azure.Communication.CallAutomation;
+﻿using Azure.Communication.CallAutomation;
+using Azure.Communication;
 
 namespace CallAutomationHero.Server
 {
     public class PlayAudio
     {
-        private readonly IConfiguration _configuration;
-        private readonly CallConnection _callConnection;
-
-        public enum PlayAudioType
+        public enum PlayAudioMessages
         {
             MainMenuAudio,
             SalesAudio,
@@ -18,60 +15,55 @@ namespace CallAutomationHero.Server
             InvalidAudio
         }
 
-        public PlayAudio(IConfiguration configuration, CallConnection callconnection)
+        public static async Task PlayAudioOperation(DtmfTone toneReceived, IConfiguration configuration, 
+            CallConnection callConnection)
         {
-            _configuration = configuration;
-            _callConnection = callconnection;
-        }
-
-        public async Task PlayAudioOperation(DtmfTone toneReceived)
-        {
-            var appBaseUri = _configuration["AppBaseUri"];
             var audioPlayOptions = new PlayOptions() { OperationContext = "SimpleIVR", Loop = false };
 
             if (toneReceived == DtmfTone.One)
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioType.SalesAudio);
+                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.SalesAudio, configuration, callConnection);
             }
             else if (toneReceived == DtmfTone.Two)
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioType.MarketingAudio);
+                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.MarketingAudio, configuration, callConnection);
             }
             else if (toneReceived == DtmfTone.Three)
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioType.CustomerCareAudio);
+                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.CustomerCareAudio, configuration, callConnection);
             }
             else if (toneReceived == DtmfTone.Four)
             {
                 audioPlayOptions.OperationContext = "AgentConnect";
-                await PlayAudioToAll(audioPlayOptions, PlayAudioType.AgentAudio);
+                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.AgentAudio, configuration, callConnection);
 
                 var addParticipantOptions = new AddParticipantsOptions(new List<CommunicationIdentifier>()
                         {
-                        new PhoneNumberIdentifier(_configuration["ParticipantToAdd"])
+                        new PhoneNumberIdentifier(configuration["ParticipantToAdd"])
                         })
                 {
-                    SourceCallerId = new PhoneNumberIdentifier(_configuration["ACSAlternatePhoneNumber"])
+                    SourceCallerId = new PhoneNumberIdentifier(configuration["ACSAlternatePhoneNumber"])
                 };
 
-                _ = await _callConnection.AddParticipantsAsync(addParticipantOptions);
+                _ = await callConnection.AddParticipantsAsync(addParticipantOptions);
             }
             else if (toneReceived == DtmfTone.Five)
             {
                 // Hangup for everyone
-                _ = await _callConnection.HangUpAsync(true);
+                _ = await callConnection.HangUpAsync(true);
             }
             else
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioType.InvalidAudio);
+                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.InvalidAudio, configuration, callConnection);
             }
         }
 
-        public async Task PlayAudioToAll(PlayOptions playAudioOptions, PlayAudioType audioType)
+        public static async Task PlayAudioToAll(PlayOptions audioPlayOptions, PlayAudioMessages audioType, 
+            IConfiguration configuration, CallConnection callConnection)
         {
-            var appBaseUri = _configuration["AppBaseUri"];
-            PlaySource salesAudio = new FileSource(new Uri(appBaseUri + _configuration[audioType.ToString()]));
-            _ = await _callConnection.GetCallMedia().PlayToAllAsync(salesAudio, playAudioOptions);
+            var appBaseUri = configuration["AppBaseUri"];
+            PlaySource audioSource = new FileSource(new Uri(appBaseUri + configuration[audioType.ToString()]));
+            _ = await callConnection.GetCallMedia().PlayToAllAsync(audioSource, audioPlayOptions);
         }
     }
 }

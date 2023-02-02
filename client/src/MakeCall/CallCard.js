@@ -14,7 +14,7 @@ import { utils } from '../Utils/Utils';
 import CustomVideoEffects from "./RawVideoAccess/CustomVideoEffects";
 import VideoEffectsContainer from './VideoEffects/VideoEffectsContainer';
 import { Label } from '@fluentui/react/lib/Label';
-import Dailpad from './Dialpad';
+import { Dialpad } from '@azure/communication-react';
 
 export default class CallCard extends React.Component {
     constructor(props) {
@@ -43,7 +43,8 @@ export default class CallCard extends React.Component {
             showLocalVideo: false,
             callMessage: undefined,
             dominantSpeakerMode: false,
-            dominantRemoteParticipant: undefined
+            dominantRemoteParticipant: undefined,
+            showDialPad: false
         };
     }
 
@@ -370,8 +371,6 @@ export default class CallCard extends React.Component {
         }
     }
 
-    
-
     async handleIncomingAudioOnOff() {
         try {
             if (!this.call.isIncomingAudioMuted) {
@@ -502,6 +501,23 @@ export default class CallCard extends React.Component {
         const microphoneDeviceInfo = microphones.find(microphoneDeviceInfo => { return microphoneDeviceInfo.id === item.key });
         this.deviceManager.selectMicrophone(microphoneDeviceInfo);
         this.setState({ selectedMicrophoneDeviceId: microphoneDeviceInfo.id });
+    };
+
+    async handleDialPadView() {
+        try {
+            if (this.state.showDialPad) {
+                this.setState({ showDialPad: false });
+            } else {
+                this.setState({ showDialPad: true });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    onSendDtmfTone = async(dtmfTone) => {
+        console.log("sending DTMF Tone as ", dtmfTone);
+        this.call.sendDtmf(dtmfTone);
     };
 
     render() {
@@ -677,6 +693,19 @@ export default class CallCard extends React.Component {
                                         <Icon iconName="PlugDisconnected" />
                                     }
                                 </span>
+                                <span className="in-call-button"
+                                    title="DialPad"
+                                    variant="secondary"
+                                    onClick={() => this.handleDialPadView()}>
+                                    {
+                                        this.state.showDialPad &&
+                                        <Icon iconName="Dialpad" />
+                                    }
+                                    {
+                                        !this.state.showDialPad &&
+                                        <Icon iconName="Dialpad" />
+                                    }
+                                </span>
                                 <Panel type={PanelType.medium}
                                     isLightDismiss
                                     isOpen={this.state.showSettings}
@@ -776,11 +805,15 @@ export default class CallCard extends React.Component {
                                 }
                             </div>
                         }
-                    </div>
-                </div>
-                <div className="ms-Grid-row">
-                    <div className="ms-Grid-col ms-lg6">
-                        <Dailpad sendDtmf={this.props.sendDtmf} />
+
+                        <div className="video-grid-row text-center">
+                        {
+                            this.state.showDialPad &&
+                            <div className="ms-Grid-col">
+                            <Dialpad onSendDtmfTone={this.onSendDtmfTone} />
+                            </div>
+                        }               
+                        </div>
                     </div>
                 </div>
             </div>

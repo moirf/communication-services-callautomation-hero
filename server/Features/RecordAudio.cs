@@ -4,15 +4,8 @@ namespace CallAutomationHero.Server
 {
     public class RecordAudio
     {
-        IConfiguration _configuration;
-        CallAutomationClient client;
-        public RecordAudio(IConfiguration configuration, CallAutomationClient client)
-        {
-            _configuration = configuration;
-            this.client = client;
-        }
-
-        public void StartCallRecording(string callConnectionId)
+        public static void StartCallRecording(string callConnectionId,
+        CallAutomationClient client)
         {
             try
             {

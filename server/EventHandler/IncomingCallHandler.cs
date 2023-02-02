@@ -19,12 +19,6 @@ namespace CallAutomationHero.Server
     {
         private readonly CallAutomationClient _callAutomationClient;
         private readonly IConfiguration _configuration;
-        private CallConnection _callConnection;
-        private PlayAudio playAudioFeature;
-        private RecognizeDtmf recognizeDtmfFeaure;
-        private RecordAudio recordAudioFeature;
-
-        private TaskCompletionSource<bool> callEstablishedTask;
 
         public IncomingCallHandler(IConfiguration configuration)
         {
@@ -63,40 +57,47 @@ namespace CallAutomationHero.Server
 
         public async Task<IResult> HandleCallback(CloudEvent[] cloudEvents, string callerId)
         {
+            CallConnection? callConnection = null;
+
             foreach (var cloudEvent in cloudEvents)
             {
-                await callEstablishedTask.Task.ConfigureAwait(false);
-
                 var @event = CallAutomationEventParser.Parse(cloudEvent);
                 Logger.LogInformation($"Event received: {JsonConvert.SerializeObject(@event)}");
+
+                if(callConnection == null)
+                {
+                    callConnection = _callAutomationClient.GetCallConnection(@event.CallConnectionId);
+                }
 
                 if (@event is CallConnected)
                 {
                     // Start Call recording
-                    recordAudioFeature.StartCallRecording(@event.CallConnectionId);
+                    RecordAudio.StartCallRecording(@event.CallConnectionId, _callAutomationClient);
 
                     //Start recognizing Dtmf
-                    await recognizeDtmfFeaure.StartRecognizingDtmf(callerId);
+                    await RecognizeDtmf.StartRecognizingDtmf(callerId, _configuration, callConnection);
                 }
                 if (@event is RecognizeCompleted { OperationContext: "MainMenu" })
                 {
                     //Perform operation as per DTMF tone recieved
                     var recognizeCompleted = (RecognizeCompleted)@event;
-                    await playAudioFeature.PlayAudioOperation(recognizeCompleted.CollectTonesResult.Tones[0]);
+                    await PlayAudio.PlayAudioOperation(recognizeCompleted.CollectTonesResult.Tones[0], _configuration,
+                       callConnection);
                 }
                 if (@event is RecognizeFailed { OperationContext: "MainMenu" })
                 {
                     // play invalid audio
-                    await playAudioFeature.PlayAudioToAll(new PlayOptions() { Loop = false }, PlayAudio.PlayAudioType.InvalidAudio);
-                    _ = await _callConnection.HangUpAsync(true);
+                    await PlayAudio.PlayAudioToAll(new PlayOptions() { Loop = false }, PlayAudio.PlayAudioMessages.InvalidAudio, 
+                        _configuration,  callConnection);
+                    _ = await callConnection.HangUpAsync(true);
                 }
                 if (@event is PlayCompleted { OperationContext: "SimpleIVR" })
                 {
-                    _ = await _callConnection.HangUpAsync(true);
+                    _ = await callConnection.HangUpAsync(true);
                 }
                 if (@event is PlayFailed { OperationContext: "SimpleIVR" })
                 {
-                    _ = await _callConnection.HangUpAsync(true);
+                    _ = await callConnection.HangUpAsync(true);
                 }
                 if(@event is AddParticipantsSucceeded)
                 {
@@ -105,7 +106,7 @@ namespace CallAutomationHero.Server
                 if(@event is AddParticipantsFailed)
                 {
                     Logger.LogError("Failed to add Agent participant");
-                    _ = await _callConnection.HangUpAsync(true);
+                    _ = await callConnection.HangUpAsync(true);
                 }
             }
             return Results.Ok();
@@ -115,24 +116,13 @@ namespace CallAutomationHero.Server
         {
             if (jsonObject != null && _callAutomationClient != null)
             {
-                callEstablishedTask = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-
                 var callerId = jsonObject["from"]!["rawId"]!.ToString();
                 var incomingCallContext = jsonObject["incomingCallContext"]!.ToString();
                 var callbackUri = new Uri(_configuration["AppBaseUri"] + $"/api/calls/{Guid.NewGuid()}?callerId={callerId}");
 
                 // Answer Call
                 var response = await _callAutomationClient.AnswerCallAsync(incomingCallContext, callbackUri);
-                _callConnection = response.Value.CallConnection;
-
-                //Initializing all the feature objects
-                playAudioFeature = new PlayAudio(_configuration, _callConnection);
-                recordAudioFeature = new RecordAudio(_configuration, _callAutomationClient);
-                recognizeDtmfFeaure = new RecognizeDtmf(_configuration, _callConnection);
-
                 Logger.LogInformation($"AnswerCallAsync Response -----> {response.GetRawResponse()}");
-
-                callEstablishedTask.TrySetResult(true);
 
                 return Results.Ok();
             }
