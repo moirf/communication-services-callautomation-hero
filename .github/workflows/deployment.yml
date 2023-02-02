@@ -1,0 +1,41 @@
+name: deployment server and client
+
+on:
+  workflow_call:
+    inputs:
+      environmentType:
+        required: true
+        type: string
+      appUrl:
+        required: true
+        type: string
+    secrets:
+      APP_PUBLISH_PROFILE:
+        required: true
+env:
+  AZURE_WEBAPP_NAME: callautomation   # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '18.x'                # set this to the node version to use
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environmentType }}
+    runs-on: ubuntu-latest
+    outputs:
+      appServiceAppHostName: ${{ steps.deploy.outputs.appServiceAppHostName }}
+    
+    steps:
+    - if: inputs.environmentType != 'Production'
+      name: Download artifact from build job
+      uses: actions/download-artifact@v3
+      with: 
+        name: call-automation-client-app
+
+    - name: Deploy to web app
+      id: deploy
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+

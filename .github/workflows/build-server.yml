@@ -5,18 +5,15 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dotnet-version: ['6.0.x', '7.0.x' ]
-
+    env:
+      DOTNET_VERSION: 7.0.x
     steps:
       - uses: actions/checkout@v3
-      - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+      - name: Setup .NET Core SDK ${{env.DOTNET_VERSION}}
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+          dotnet-version: ${{env.DOTNET_VERSION}}
       - name: Install dependencies
         run: dotnet restore
       - name: Build

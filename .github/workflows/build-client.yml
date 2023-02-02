@@ -7,16 +7,30 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [16.x, 18.x]
+    env:
+      NODE_VERSION: 14.x
 
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm run build --if-present
-      - run: npm test
+          node-version: ${{env.NODE_VERSION}}
+      - name: Caching node modules
+        uses: actions/cache@v3
+        with:
+          path: "client/node_modules"
+          key: node-modules-${{ hashFiles('client/package.json')}}
+          
+      - name: npm install, build, and test
+        run: |
+          cd client
+          npm install
+          npm run build --if-present
+          npm run test --if-present
+
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v3
+        with: 
+          name: call-automation-client-app
+          path: .
