@@ -1,13 +1,13 @@
 const CommunicationIdentityClient =
   require("@azure/communication-administration").CommunicationIdentityClient;
 const HtmlWebPackPlugin = require("html-webpack-plugin");
-const config = require("./config.json");
+const connectionString = process.env.CONNECTION_STRING
 
 const PORT = process.env.port || 8080;
 
 module.exports = {
   devtool: "inline-source-map",
-  mode: "development",
+  mode: "production",
   entry: "./src/index.js",
   module: {
     rules: [
@@ -43,13 +43,11 @@ module.exports = {
     before: function (app) {
       app.post("/tokens/provisionUser", async (req, res) => {
         try {
-          if (config?.connectionString?.indexOf("endpoint=") === -1) {
-            throw new Error("Update `config.json` with connection string");
+          if (connectionString?.indexOf("endpoint=") === -1) {
+            throw new Error("Update `env configuration` with connection string");
           }
 
-          const communicationIdentityClient = new CommunicationIdentityClient(
-            config.connectionString
-          );
+          const communicationIdentityClient = new CommunicationIdentityClient(connectionString);
           let communicationUserId =
             await communicationIdentityClient.createUser();
           const tokenResponse = await communicationIdentityClient.issueToken(
