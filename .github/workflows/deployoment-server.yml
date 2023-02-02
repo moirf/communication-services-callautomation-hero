@@ -1,4 +1,4 @@
-name: deployment server and client
+name: deployment server
 
 on:
   workflow_call:
@@ -29,7 +29,7 @@ jobs:
       name: Download artifact from build job
       uses: actions/download-artifact@v3
       with: 
-        name: call-automation-client-app
+        name: dotnet-webapp
 
     - name: Deploy to web app
       id: deploy
@@ -37,5 +37,5 @@ jobs:
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/dotnet-webapp
 
