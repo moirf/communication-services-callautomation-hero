@@ -1,10 +1,10 @@
 const express = require('express')
 
 const CommunicationIdentityClient = require("@azure/communication-administration").CommunicationIdentityClient;
-const config = require("./config.json");
 
 const app = express()
 const port = process.env.port || 8080;
+const connectionString = process.env.CONNECTION_STRING
 
 app.get('/serverstatus', (req, res)=> res.send('server is running'))
 
@@ -14,9 +14,7 @@ app.post("/tokens/provisionUser", async (req, res) => {
       throw new Error("Update `config.json` with connection string");
     }
 
-    const communicationIdentityClient = new CommunicationIdentityClient(
-      config.connectionString
-    );
+    const communicationIdentityClient = new CommunicationIdentityClient(connectionString);
     let communicationUserId = await communicationIdentityClient.createUser();
     const tokenResponse = await communicationIdentityClient.issueToken(
       communicationUserId,
