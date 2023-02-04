@@ -1,5 +1,6 @@
 import React from "react";
-import { TextField, PrimaryButton } from 'office-ui-fabric-react'
+import { PrimaryButton } from "@fluentui/react/lib/Button";
+import { TextField } from "@fluentui/react/lib/TextField";
 import { utils } from "../Utils/Utils";
 import { v4 as uuid } from 'uuid';
 

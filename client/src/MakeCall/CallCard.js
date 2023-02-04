@@ -1,20 +1,26 @@
 import React from "react";
-import { MessageBar, MessageBarType, DefaultButton } from 'office-ui-fabric-react'
+import { MessageBar,  MessageBarType } from "@fluentui/react/lib/MessageBar";
+import { DefaultButton } from "@fluentui/react/lib/Button";
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import { TooltipHost } from '@fluentui/react/lib/Tooltip';
+import { Label } from "@fluentui/react/lib/Label";
+import { Panel, PanelType } from "@fluentui/react/lib/Panel";
+import { Icon } from '@fluentui/react/lib/Icon';
+import { Dropdown } from "@fluentui/react/lib/Dropdown";
+
+import { utils } from '../Utils/Utils';
+import { Dialpad } from '@azure/communication-react';
+import {
+  LocalVideoStream,
+  Features,
+  LocalAudioStream,
+} from "@azure/communication-calling";
+import LocalVideoPreviewCard from "./LocalVideoPreviewCard";
 import StreamRenderer from "./StreamRenderer";
 import AddParticipantPopover from "./AddParticipantPopover";
 import RemoteParticipantCard from "./RemoteParticipantCard";
-import { Panel, PanelType } from 'office-ui-fabric-react/lib/Panel';
-import { Icon } from '@fluentui/react/lib/Icon';
-import LocalVideoPreviewCard from './LocalVideoPreviewCard';
-import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
-import { LocalVideoStream, Features, LocalAudioStream } from '@azure/communication-calling';
-import { utils } from '../Utils/Utils';
 import CustomVideoEffects from "./RawVideoAccess/CustomVideoEffects";
-import VideoEffectsContainer from './VideoEffects/VideoEffectsContainer';
-import { Label } from '@fluentui/react/lib/Label';
-import { Dialpad } from '@azure/communication-react';
+import VideoEffectsContainer from "./VideoEffects/VideoEffectsContainer";
 
 export default class CallCard extends React.Component {
     constructor(props) {
