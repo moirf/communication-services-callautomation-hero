@@ -10,7 +10,7 @@ export const utils = {
         return window.location.origin;
     },
     provisionNewUser: async (userId) => {
-        let response = await fetch('/tokens/provisionUser', {
+        let response = await fetch('https://callautomationheroserver.azurewebsites.net/tokens/provisionUser', {
             method: 'POST',
             body: { userId },
             headers: {

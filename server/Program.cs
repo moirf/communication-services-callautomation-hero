@@ -3,6 +3,7 @@ using Azure.Messaging.EventGrid;
 using CallAutomationHero.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
+using Azure.Communication.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddTransient<IncomingCallHandler>();
 builder.Services.AddTransient<RecordingHandler>();
+builder.Services.AddCors();
 
 var app = builder.Build();
 
@@ -52,6 +54,26 @@ app.MapPost("api/recording", ([FromBody] EventGridEvent[] eventGridEvents, Recor
     return handler.HandleRecording(eventGridEvents);
 }).AddEndpointFilterFactory(EndpointFilter.RequestLogger);
 
+app.MapPost("/tokens/provisionUser", async (
+    ILogger<Program> logger) =>
+{
+    try
+    {
+        logger.LogInformation("request for provisioning User");
+
+        var communicationIdentityClient = new CommunicationIdentityClient(builder.Configuration["ConnectionString"]);
+
+        List<CommunicationTokenScope> scopes = new List<CommunicationTokenScope> { CommunicationTokenScope.VoIP };
+        var response = await communicationIdentityClient.CreateUserAndTokenAsync(scopes);
+        return Results.Json(response.Value);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError("Failed to create user and token" + ex.Message);
+    }
+    return Results.Ok();
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
@@ -64,6 +86,13 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(
            Path.Combine(builder.Environment.ContentRootPath, "audio")),
     RequestPath = "/audio"
+});
+
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader();
 });
 
 app.UseAuthorization();
