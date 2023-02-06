@@ -1,4 +1,5 @@
-const CommunicationIdentityClient = require("@azure/communication-identity");
+const CommunicationIdentityClient =
+  require("@azure/communication-identity").CommunicationIdentityClient;
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const BundleAnalyzerPlugin =
   require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
@@ -6,8 +7,7 @@ const config = require("./config.json");
 
 const PORT = process.env.port || 8080;
 const CONNECTION_STRING =
-  process.env.CONNECTION_STRING ||
-  "endpoint=https://acs-app-validations.communication.azure.com/;accesskey=YHuzUTXJtHAuvglEyy0yf97vGEhZJ0rQ3QGSdMioovuohQcTeeUVHx3in0XNFot816J2+eIlxzwdw8VXlsqrwQ==";
+  process.env.CONNECTION_STRING || "<put connection string for local run>";
 module.exports = {
   devtool: "inline-source-map",
   mode: "development",
@@ -51,9 +51,8 @@ module.exports = {
       app.post("/tokens/provisionUser", async (req, res) => {
         try {
           const client = new CommunicationIdentityClient(CONNECTION_STRING);
-          let userId = await client.createUser();
-          const tokenResponse = await client.issueToken(userId, ["voip"]);
-          res.json(tokenResponse);
+          let token = await client.createUserAndToken(["voip"]);
+          res.json(token);
         } catch (error) {
           console.error(error);
         }
