@@ -4,13 +4,14 @@ import {
     isMicrosoftTeamsUserIdentifier,
     isUnknownIdentifier
 } from '@azure/communication-common';
+const config = require("../../config.json");
 
 export const utils = {
     getAppServiceUrl: () => {
         return window.location.origin;
     },
     provisionNewUser: async (userId) => {
-        let response = await fetch('https://callautomationheroserver.azurewebsites.net/tokens/provisionUser', {
+        let response = await fetch(config.serverURL +'/tokens/provisionUser', {
             method: 'POST',
             body: { userId },
             headers: {

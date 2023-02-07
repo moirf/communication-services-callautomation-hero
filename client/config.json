@@ -1,3 +1,4 @@
 {
-    "connectionString": "<connectionString>"
+    "connectionString": "<connectionString>",
+    "serverURL":"<serverURL>"
 }
