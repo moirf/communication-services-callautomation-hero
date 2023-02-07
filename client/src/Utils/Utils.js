@@ -10,7 +10,9 @@ export const utils = {
         return window.location.origin;
     },
     provisionNewUser: async (userId) => {
-        let response = await fetch("https://localhost:7196/api/user/token", {
+        const apiurl =
+          process.env.SERVER_API || "https://localhost:7196/api/user/token";
+        let response = await fetch(apiurl, {
           method: "POST",
           body: { userId },
           headers: {

@@ -1,8 +1,4 @@
-const CommunicationIdentityClient =
-  require("@azure/communication-identity").CommunicationIdentityClient;
 const HtmlWebPackPlugin = require("html-webpack-plugin");
-const BundleAnalyzerPlugin =
-  require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const config = require("./config.json");
 
 const PORT = process.env.port || 8080;
@@ -42,21 +38,9 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: "./public/index.html",
     }),
-    new BundleAnalyzerPlugin(),
   ],
   devServer: {
     open: true,
     port: PORT,
-    before: function (app) {
-      app.post("/tokens/provisionUser", async (req, res) => {
-        try {
-          const client = new CommunicationIdentityClient(CONNECTION_STRING);
-          let token = await client.createUserAndToken(["voip"]);
-          res.json(token);
-        } catch (error) {
-          console.error(error);
-        }
-      });
-    },
   },
 };
