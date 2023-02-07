@@ -42,8 +42,15 @@ namespace CallAutomationHero.Server
                         var recordingDownloadUri = new Uri(acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].ContentLocation);
                         var downloadRespose = await _callAutomationClient.GetCallRecording().DownloadStreamingAsync(recordingDownloadUri);
                         var containerName = _configuration["BlobContainerName"];
+                        var blobConnectionString = _configuration["BlobStorageConnectionString"];
+
+                        if(containerName == null || blobConnectionString == null)
+                        {
+                            return Results.Ok("Recording not uploaded to blob storage, blob settings not available");
+                        }
 
                         string filePath = $".\\recording\\{acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].DocumentId}.mp4";
+                        
                         using Stream readFromStream = downloadRespose.Value;
                         using Stream writeToStream = System.IO.File.Open(filePath, FileMode.Create);
                         await readFromStream.CopyToAsync(writeToStream);
@@ -51,23 +58,24 @@ namespace CallAutomationHero.Server
 
                         Logger.LogInformation($"Starting to upload .mp4 to BlobStorage into container -- > {containerName}");
 
-                        var blobStorageHelperInfo = await BlobStorageHelper.UploadFileAsync(_configuration["BlobStorageConnectionString"], containerName, filePath, filePath);
-                        if (blobStorageHelperInfo.Status)
+                        var uploadFileResponse = await BlobStorageHelper.UploadFileAsync(blobConnectionString, containerName, filePath);
+                        if (uploadFileResponse.IsSuccess)
                         {
-                            Logger.LogInformation(blobStorageHelperInfo.Message);
-                            Logger.LogInformation($"Deleting temporary .mp4 file being created");
+                            // after upload delete the files from local.
+                            Logger.LogInformation(uploadFileResponse.Message);
                             System.IO.File.Delete(filePath);
                         }
                         else
                         {
-                            Logger.LogError($".mp4 file was not uploaded,{blobStorageHelperInfo.Message}");
+                            Logger.LogError($".mp4 file was not uploaded,{uploadFileResponse.Message}");
+                            return Results.BadRequest($".mp4 file was not uploaded,{uploadFileResponse.Message}");
                         }
                     }
                     catch(Exception ex)
                     {
                         Logger.LogError($"Failed to upload the file. error message,{ex.Message}");
+                        return Results.BadRequest($"Failed to upload the file. error message,{ex.Message}");
                     }
-                    
                 }
             }
             return Results.Ok();
