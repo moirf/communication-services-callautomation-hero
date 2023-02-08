@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet publish -c Release -o ../dotnet-webapp -r linux-x64 --self-contained true /p:UseAppHost=true
+        run: dotnet publish -c Release -o ../dotnet-webapp -r linux-x64 --self-contained true -p:PublishSingleFile=true /p:UseAppHost=true
       - name: Test
         run: dotnet test --no-restore --verbosity normal
 
