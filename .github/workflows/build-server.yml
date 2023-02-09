@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet publish -c Release -o ./dotnet-webapp --self-contained true
+        run: dotnet publish -c Release -o ./dotnet-webapp -r win-x64
       - name: Test
         run: dotnet test --no-restore --verbosity normal
 
