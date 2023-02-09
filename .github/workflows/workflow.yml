@@ -27,9 +27,9 @@ jobs:
     uses: ./.github/workflows/build-client.yml
 
 
-  # Deploy to the test environment.
+  # Deploy to the test server environment.
   test-server-deployment:
-    uses: ./.github/workflows/deployment.yml
+    uses: ./.github/workflows/deployment-server.yml
     needs:
       - lint
       - build-server
@@ -39,9 +39,9 @@ jobs:
     secrets:
       APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
 
-  # Deploy to the test environment.
+  # Deploy to the test client environment.
   test-client-deployment:
-    uses: ./.github/workflows/deployment.yml
+    uses: ./.github/workflows/deployment-client.yml
     needs:
       - lint
       - build-client
@@ -51,10 +51,20 @@ jobs:
     secrets:
       APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
 
-  # Deploy to the production environment.
-  production-deployment:
-    uses: ./.github/workflows/deployment.yml
-    needs: [test-server-deployment, test-client-deployment]
+  # Deploy to the production server environment.
+  production-server-deployment:
+    uses: ./.github/workflows/deployment-server.yml
+    needs: [test-server-deployment]
+    with:
+      environmentType: Production
+      appUrl: https://callautomation.azurewebsites.net
+    secrets:
+      APP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_HEROSAMPLE_PUBLISH_PROFILE }}
+
+  # Deploy to the production client environment.
+  production-client-deployment:
+    uses: ./.github/workflows/deployment-client.yml
+    needs: [test-client-deployment]
     with:
       environmentType: Production
       appUrl: https://callautomation.azurewebsites.net

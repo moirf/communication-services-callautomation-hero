@@ -1,14 +1,16 @@
-const CommunicationIdentityClient =
-  require("@azure/communication-administration").CommunicationIdentityClient;
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const config = require("./config.json");
 
 const PORT = process.env.port || 8080;
-
+const CONNECTION_STRING =
+  process.env.CONNECTION_STRING || "<put connection string for local run>";
 module.exports = {
   devtool: "inline-source-map",
   mode: "development",
   entry: "./src/index.js",
+  output: {
+    filename: "main.bundle.js",
+  },
   module: {
     rules: [
       {
@@ -34,33 +36,11 @@ module.exports = {
   },
   plugins: [
     new HtmlWebPackPlugin({
-      template: "./public/index.html"
+      template: "./public/index.html",
     }),
   ],
   devServer: {
     open: true,
     port: PORT,
-    before: function (app) {
-      app.post("/tokens/provisionUser", async (req, res) => {
-        try {
-          if (config?.connectionString?.indexOf("endpoint=") === -1) {
-            throw new Error("Update `config.json` with connection string");
-          }
-
-          const communicationIdentityClient = new CommunicationIdentityClient(
-            config.connectionString
-          );
-          let communicationUserId =
-            await communicationIdentityClient.createUser();
-          const tokenResponse = await communicationIdentityClient.issueToken(
-            communicationUserId,
-            ["voip"]
-          );
-          res.json(tokenResponse);
-        } catch (error) {
-          console.error(error);
-        }
-      });
-    },
   },
 };

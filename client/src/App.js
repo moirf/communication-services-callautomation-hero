@@ -2,14 +2,14 @@ import React from 'react';
 import './App.css';
 import MakeCall from './MakeCall/MakeCall'
 import { initializeIcons } from '@uifabric/icons';
-import * as packageJson from '../package.json';
+import packageInfo from '../package.json';
 
 initializeIcons();
 
 function App() {
 
   function VWebSdkVersion() {
-    return packageJson.dependencies['@azure/communication-calling'];
+    return packageInfo.dependencies['@azure/communication-calling'];
   }
 
   return (

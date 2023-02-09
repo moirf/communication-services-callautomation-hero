@@ -17,6 +17,12 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet publish -c Release -o ./dotnet-webapp -r win-x64
       - name: Test
         run: dotnet test --no-restore --verbosity normal
+
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v3
+        with: 
+          name: dotnet-webapp
+          path: dotnet-webapp

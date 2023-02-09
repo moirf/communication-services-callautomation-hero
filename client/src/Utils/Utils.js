@@ -10,13 +10,15 @@ export const utils = {
         return window.location.origin;
     },
     provisionNewUser: async (userId) => {
-        let response = await fetch('/tokens/provisionUser', {
-            method: 'POST',
-            body: { userId },
-            headers: {
-                'Accept': 'application/json, text/plain, */*',
-                'Content-Type': 'application/json'
-            },
+        const apiurl =
+          process.env.SERVER_API || "https://localhost:7196/api/user/token";
+        let response = await fetch(apiurl, {
+          method: "POST",
+          body: { userId },
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+          },
         });
 
         if (response.ok) {

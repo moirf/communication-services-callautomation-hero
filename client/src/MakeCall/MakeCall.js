@@ -1,12 +1,9 @@
 import React from "react";
 import { CallClient, LocalVideoStream, Features } from '@azure/communication-calling';
 import { AzureCommunicationTokenCredential } from '@azure/communication-common';
-import {
-    PrimaryButton,
-    TextField,
-    MessageBar,
-    MessageBarType
-} from 'office-ui-fabric-react'
+import { PrimaryButton } from "@fluentui/react/lib/Button";
+import { TextField } from "@fluentui/react/lib/TextField";
+import { MessageBar,  MessageBarType} from '@fluentui/react/lib/MessageBar'
 import { Icon } from '@fluentui/react/lib/Icon';
 import IncomingCallCard from './IncomingCallCard';
 import CallCard from '../MakeCall/CallCard'
