@@ -29,8 +29,13 @@ jobs:
           npm run build --if-present
           npm run test --if-present
 
+      - name: zip files 
+        run: |
+          cd client
+          zip -r client.zip dist
+
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v3
         with: 
           name: call-automation-client-app
-          path: .
+          path: client.zip
