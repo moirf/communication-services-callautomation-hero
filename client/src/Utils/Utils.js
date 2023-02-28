@@ -65,5 +65,32 @@ export const utils = {
                 });
             }
         }
-    }
+    },
+    startRecording: async (id) => {
+        try {
+          const response = await fetch(config.serverURL + '/startRecording?serverCallId=' + id);
+          if (response.ok) {
+            const recordingid = await response.json();
+            return { recordingId: recordingid, message: '' };
+          }
+          const output = await response.json();
+          const errorMessage = output.message || 'Recording could not be started';
+          return { recordingId: '', message: errorMessage };
+        } catch (e) {
+          return { recordingId: '', message: 'Recording could not be started' };
+        }
+      },
+      stopRecording: async (recordingId) => {
+        try {
+          const response = await fetch(config.serverURL +
+            '/stopRecording?recordingId=' + recordingId
+          );
+          if (response.ok) {
+            return { message: '' };
+          }
+          return { message: 'Recording could not be stopped' };
+        } catch (e) {
+          return { message: 'Recording could not be stopped' };
+        }
+      },
 }

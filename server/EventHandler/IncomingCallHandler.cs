@@ -71,9 +71,6 @@ namespace CallAutomationHero.Server
 
                 if (@event is CallConnected)
                 {
-                    // Start Call recording
-                    RecordAudio.StartCallRecording(@event.CallConnectionId, _callAutomationClient);
-
                     //Start recognizing Dtmf
                     await RecognizeDtmf.StartRecognizingDtmf(callerId, _configuration, callConnection);
                 }

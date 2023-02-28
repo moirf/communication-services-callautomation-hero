@@ -4,6 +4,7 @@ using CallAutomationHero.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Azure.Communication.Identity;
+using Azure.Communication.CallAutomation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,6 +73,36 @@ app.MapPost("/tokens/provisionUser", async (
         logger.LogError("Failed to create user and token" + ex.Message);
     }
     return Results.Ok();
+});
+
+
+/// <summary>
+/// Method to start call recording
+/// </summary>
+/// <param name="serverCallId">Conversation id of the call</param>
+app.MapGet("/startRecording", async (
+    ILogger<Program> logger,
+    [FromQuery] string serverCallId,
+    RecordingHandler handler) =>
+{
+    logger.LogInformation("serverCallId" + serverCallId);
+    return await handler.StartRecordingAsync(serverCallId);
+});
+
+
+/// <summary>
+/// Method to stop call recording
+/// </summary>
+/// <param name="serverCallId">Conversation id of the call</param>
+/// <param name="recordingId">Recording id of the call</param>
+/// <returns></returns>
+app.MapGet("/stopRecording", async(
+    ILogger < Program > logger,
+    [FromQuery]  string recordingId,
+    RecordingHandler handler) =>
+{
+    logger.LogInformation("recordingId" + recordingId);
+    return await handler.StopRecordingAsync(recordingId);
 });
 
 // Configure the HTTP request pipeline.

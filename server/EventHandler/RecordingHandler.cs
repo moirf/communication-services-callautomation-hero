@@ -9,6 +9,8 @@ namespace CallAutomationHero.Server
     {
         private readonly CallAutomationClient _callAutomationClient;
         private readonly IConfiguration _configuration;
+        private const string CallRecodingActiveErrorCode = "8553";
+        private const string CallRecodingActiveError = "Recording is already in progress, one recording can be active at one time.";
 
         public RecordingHandler(IConfiguration configuration)
         {
@@ -71,6 +73,70 @@ namespace CallAutomationHero.Server
                 }
             }
             return Results.Ok();
+        }
+
+        /// <summary>
+        /// Method to start call recording
+        /// </summary>
+        /// <param name="serverCallId">Conversation id of the call</param>
+        public async Task<IResult> StartRecordingAsync(string serverCallId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(serverCallId))
+                {
+                    //Passing RecordingContent initiates recording in specific format. audio/audiovideo
+                    //RecordingChannel is used to pass the channel type. mixed/unmixed
+                    //RecordingFormat is used to pass the format of the recording. mp4/mp3/wav
+                    StartRecordingOptions recordingOptions = new StartRecordingOptions(new ServerCallLocator(serverCallId));
+                    var startRecordingResponse = await _callAutomationClient.GetCallRecording()
+                        .StartRecordingAsync(recordingOptions).ConfigureAwait(false);
+
+                    Logger.LogInformation($"StartRecordingAsync response -- >  {startRecordingResponse.GetRawResponse()}, Recording Id: {startRecordingResponse.Value.RecordingId}");
+
+                    return Results.Json(startRecordingResponse.Value);
+                }
+                else
+                {
+                    return Results.Json(new { Message = "serverCallId is invalid" });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains(CallRecodingActiveErrorCode))
+                {
+                    return Results.Json(new { Message = CallRecodingActiveError });
+                }
+                return Results.Json(new { Exception = ex });
+            }
+        }
+
+
+        /// <summary>
+        /// Method to stop call recording
+        /// </summary>
+        /// <param name="recordingId">Recording id of the call</param>
+        /// <returns></returns>
+        public async Task<IResult> StopRecordingAsync(string recordingId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(recordingId))
+                {
+                    var stopRecording = await _callAutomationClient.GetCallRecording().StopRecordingAsync(recordingId).ConfigureAwait(false);
+                    Logger.LogInformation($"StopRecordingAsync response -- > {stopRecording}");
+
+                    return Results.Ok();
+                }
+                else
+                {
+                    return Results.Json(new { Message = "recordingId is invalid" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Results.Json(new { Exception = ex });
+            }
         }
     }
 }
