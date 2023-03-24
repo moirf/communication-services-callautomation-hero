@@ -36,16 +36,11 @@ namespace CallAutomationHero.Server
             {
                 audioPlayOptions.OperationContext = "AgentConnect";
                 await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.AgentAudio, configuration, callConnection);
-
-                var addParticipantOptions = new AddParticipantsOptions(new List<CommunicationIdentifier>()
-                        {
-                        new PhoneNumberIdentifier(configuration["ParticipantToAdd"])
-                        })
-                {
-                    SourceCallerId = new PhoneNumberIdentifier(configuration["ACSAlternatePhoneNumber"])
-                };
-
-                _ = await callConnection.AddParticipantsAsync(addParticipantOptions);
+                var Target = new PhoneNumberIdentifier(configuration["ParticipantToAdd"]);
+                var SourceCallerId = new PhoneNumberIdentifier(configuration["ACSAlternatePhoneNumber"]);
+                var CallInvite = new CallInvite(Target, SourceCallerId);
+                var addParticipantOptions = new AddParticipantOptions(CallInvite);
+                await callConnection.AddParticipantAsync(addParticipantOptions);
             }
             else if (toneReceived == DtmfTone.Five)
             {

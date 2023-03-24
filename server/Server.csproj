@@ -19,7 +19,7 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-	<PackageReference Include="Azure.Communication.CallAutomation" Version="1.0.0-beta.1" />
+	<PackageReference Include="Azure.Communication.CallAutomation" Version="1.0.0-alpha.20230323.4" />
   </ItemGroup>
 
   <ItemGroup>
