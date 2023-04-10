@@ -63,7 +63,7 @@ namespace CallAutomationHero.Server
         /// <returns>BlobStorageHelperInfo</returns>
         public static async Task<BlobStorageHelperInfo> UploadFileAsync(string connectionString, string containerName, string blobName, string filePath)
         {
-            BlobStorageHelperInfo blobStorageHelperInfo = new BlobStorageHelperInfo();
+            BlobStorageHelperInfo blobStorageHelperInfo = new ();
             try
             {
                 //checking if container is available
@@ -83,7 +83,7 @@ namespace CallAutomationHero.Server
                 }
 
                 //Upload blob
-                BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                BlobServiceClient blobServiceClient = new (connectionString);
                 BlobContainerClient blobContainerClient = blobServiceClient.GetBlobContainerClient(containerName);
                 BlobClient blobClient = blobContainerClient.GetBlobClient(blobName);
 
