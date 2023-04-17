@@ -7,7 +7,6 @@ using Azure.Messaging.EventGrid;
 using Azure.Messaging.EventGrid.SystemEvents;
 using Newtonsoft.Json;
 using System.Text.Json.Nodes;
-
 namespace CallAutomationHero.Server
 {
     /// <summary>
@@ -78,7 +77,9 @@ namespace CallAutomationHero.Server
                 {
                     //Perform operation as per DTMF tone recieved
                     var recognizeCompleted = (RecognizeCompleted)@event;
-                    await PlayAudio.PlayAudioOperation(recognizeCompleted.CollectTonesResult.Tones[0], _configuration,
+                    CollectTonesResult collectedTones = (CollectTonesResult)recognizeCompleted.RecognizeResult;
+
+                    await PlayAudio.PlayAudioOperation(collectedTones.Tones[0], _configuration,
                        callConnection);
                 }
                 if (@event is RecognizeFailed { OperationContext: "MainMenu" })
@@ -96,11 +97,11 @@ namespace CallAutomationHero.Server
                 {
                     _ = await callConnection.HangUpAsync(true);
                 }
-                if(@event is AddParticipantsSucceeded)
+                if(@event is AddParticipantSucceeded)
                 {
                     Logger.LogInformation("Successfully added Agent participant");
                 }
-                if(@event is AddParticipantsFailed)
+                if(@event is AddParticipantFailed)
                 {
                     Logger.LogError("Failed to add Agent participant");
                     _ = await callConnection.HangUpAsync(true);
