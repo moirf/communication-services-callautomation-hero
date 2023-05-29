@@ -3,16 +3,16 @@ using Azure.Messaging.EventGrid;
 using CallAutomationHero.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
+using Azure.Communication.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
 builder.Services.AddTransient<IncomingCallHandler>();
 builder.Services.AddTransient<RecordingHandler>();
+builder.Services.AddCors();
 
 var app = builder.Build();
 
@@ -52,6 +52,56 @@ app.MapPost("api/recording", ([FromBody] EventGridEvent[] eventGridEvents, Recor
     return handler.HandleRecording(eventGridEvents);
 }).AddEndpointFilterFactory(EndpointFilter.RequestLogger);
 
+app.MapPost("/tokens/provisionUser", async (
+    ILogger<Program> logger) =>
+{
+    try
+    {
+        logger.LogInformation("request for provisioning User");
+
+        var communicationIdentityClient = new CommunicationIdentityClient(builder.Configuration["ConnectionString"]);
+
+        List<CommunicationTokenScope> scopes = new List<CommunicationTokenScope> { CommunicationTokenScope.VoIP };
+        var response = await communicationIdentityClient.CreateUserAndTokenAsync(scopes);
+        return Results.Json(response.Value);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError("Failed to create user and token" + ex.Message);
+    }
+    return Results.Ok();
+});
+
+
+/// <summary>
+/// Method to start call recording
+/// </summary>
+/// <param name="serverCallId">Conversation id of the call</param>
+app.MapGet("/startRecording", async (
+    ILogger<Program> logger,
+    [FromQuery] string serverCallId,
+    RecordingHandler handler) =>
+{
+    logger.LogInformation("serverCallId" + serverCallId);
+    return await handler.StartRecordingAsync(serverCallId);
+});
+
+
+/// <summary>
+/// Method to stop call recording
+/// </summary>
+/// <param name="serverCallId">Conversation id of the call</param>
+/// <param name="recordingId">Recording id of the call</param>
+/// <returns></returns>
+app.MapGet("/stopRecording", async (
+    ILogger<Program> logger,
+    [FromQuery] string recordingId,
+    RecordingHandler handler) =>
+{
+    logger.LogInformation("recordingId" + recordingId);
+    return await handler.StopRecordingAsync(recordingId);
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
@@ -64,6 +114,13 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(
            Path.Combine(builder.Environment.ContentRootPath, "audio")),
     RequestPath = "/audio"
+});
+
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader();
 });
 
 app.UseAuthorization();

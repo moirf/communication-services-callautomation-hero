@@ -9,6 +9,8 @@ namespace CallAutomationHero.Server
     {
         private readonly CallAutomationClient _callAutomationClient;
         private readonly IConfiguration _configuration;
+        private const string CallRecodingActiveErrorCode = "8553";
+        private const string CallRecodingActiveError = "Recording is already in progress, one recording can be active at one time.";
 
         public RecordingHandler(IConfiguration configuration)
         {
@@ -34,43 +36,112 @@ namespace CallAutomationHero.Server
                         };
                         return Results.Ok(responseData);
                     }
-                }
-                else if (eventData is AcsRecordingFileStatusUpdatedEventData acsRecordingFileStatusUpdatedEventData)
-                {
-                    try
+                    else if (eventData is AcsRecordingFileStatusUpdatedEventData acsRecordingFileStatusUpdatedEventData)
                     {
-                        var recordingDownloadUri = new Uri(acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].ContentLocation);
-                        var downloadRespose = await _callAutomationClient.GetCallRecording().DownloadStreamingAsync(recordingDownloadUri);
-                        var containerName = _configuration["BlobContainerName"];
-
-                        string filePath = $".\\recording\\{acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].DocumentId}.mp4";
-                        using Stream readFromStream = downloadRespose.Value;
-                        using Stream writeToStream = System.IO.File.Open(filePath, FileMode.Create);
-                        await readFromStream.CopyToAsync(writeToStream);
-                        await writeToStream.FlushAsync();
-
-                        Logger.LogInformation($"Starting to upload .mp4 to BlobStorage into container -- > {containerName}");
-
-                        var blobStorageHelperInfo = await BlobStorageHelper.UploadFileAsync(_configuration["BlobStorageConnectionString"], containerName, filePath, filePath);
-                        if (blobStorageHelperInfo.Status)
+                        try
                         {
-                            Logger.LogInformation(blobStorageHelperInfo.Message);
-                            Logger.LogInformation($"Deleting temporary .mp4 file being created");
-                            System.IO.File.Delete(filePath);
+                            var recordingDownloadUri = new Uri(acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].ContentLocation);
+                            var downloadRespose = await _callAutomationClient.GetCallRecording().DownloadStreamingAsync(recordingDownloadUri);
+                            var containerName = _configuration["BlobContainerName"];
+                            string fileName = $"{acsRecordingFileStatusUpdatedEventData.RecordingStorageInfo.RecordingChunks[0].DocumentId}.mp4";
+                            string filePath = $".\\{fileName}";
+                            using Stream readFromStream = downloadRespose.Value;
+                            using Stream writeToStream = File.Open(filePath, FileMode.OpenOrCreate);
+                            await readFromStream.CopyToAsync(writeToStream);
+                            await writeToStream.FlushAsync();
+                            writeToStream.Close();
+
+                            Logger.LogInformation($"Starting to upload .mp4 to BlobStorage into container -- > {containerName}");
+
+                            var blobStorageHelperInfo = await BlobStorageHelper.UploadFileAsync(_configuration["BlobStorageConnectionString"], containerName, fileName, filePath);
+                            if (blobStorageHelperInfo.Status)
+                            {
+                                Logger.LogInformation(blobStorageHelperInfo.Message);
+                                Logger.LogInformation($"Deleting temporary .mp4 file being created");
+                                File.Delete(filePath);
+                            }
+                            else
+                            {
+                                Logger.LogError($".mp4 file was not uploaded,{blobStorageHelperInfo.Message}");
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            Logger.LogError($".mp4 file was not uploaded,{blobStorageHelperInfo.Message}");
+                            Logger.LogError($"Failed to upload the file. error message,{ex.Message}");
                         }
                     }
-                    catch(Exception ex)
-                    {
-                        Logger.LogError($"Failed to upload the file. error message,{ex.Message}");
-                    }
-                    
                 }
             }
             return Results.Ok();
+        }
+
+        /// <summary>
+        /// Method to start call recording
+        /// </summary>
+        /// <param name="serverCallId">Conversation id of the call</param>
+        public async Task<IResult> StartRecordingAsync(string serverCallId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(serverCallId))
+                {
+                    //Passing RecordingContent initiates recording in specific format. audio/audiovideo
+                    //RecordingChannel is used to pass the channel type. mixed/unmixed
+                    //RecordingFormat is used to pass the format of the recording. mp4/mp3/wav
+                    StartRecordingOptions recordingOptions = new(new ServerCallLocator(serverCallId))
+                    {
+                        RecordingContent = RecordingContent.AudioVideo,
+                        RecordingChannel = RecordingChannel.Mixed,
+                        RecordingFormat=RecordingFormat.Mp4
+                    };
+                    var startRecordingResponse = await _callAutomationClient.GetCallRecording().
+                        StartAsync(recordingOptions).ConfigureAwait(false);
+
+                    Logger.LogInformation($"StartRecordingAsync response -- >  {startRecordingResponse.GetRawResponse()}, Recording Id: {startRecordingResponse.Value.RecordingId}");
+
+                    return Results.Json(startRecordingResponse.Value);
+                }
+                else
+                {
+                    return Results.Json(new { Message = "serverCallId is invalid" });
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains(CallRecodingActiveErrorCode))
+                {
+                    return Results.Json(new { Message = CallRecodingActiveError });
+                }
+                return Results.Json(new { Exception = ex });
+            }
+        }
+
+
+        /// <summary>
+        /// Method to stop call recording
+        /// </summary>
+        /// <param name="recordingId">Recording id of the call</param>
+        /// <returns></returns>
+        public async Task<IResult> StopRecordingAsync(string recordingId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(recordingId))
+                {
+                    var stopRecording = await _callAutomationClient.GetCallRecording().StopAsync(recordingId).ConfigureAwait(false);
+                    Logger.LogInformation($"StopRecordingAsync response -- > {stopRecording}");
+
+                    return Results.Ok();
+                }
+                else
+                {
+                    return Results.Json(new { Message = "recordingId is invalid" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Results.Json(new { Exception = ex });
+            }
         }
     }
 }

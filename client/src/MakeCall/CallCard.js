@@ -44,7 +44,9 @@ export default class CallCard extends React.Component {
             callMessage: undefined,
             dominantSpeakerMode: false,
             dominantRemoteParticipant: undefined,
-            showDialPad: false
+            showDialPad: false,
+            startRecording: false,
+            recordingId: ""
         };
     }
 
@@ -515,6 +517,32 @@ export default class CallCard extends React.Component {
         }
     }
 
+    async handleStartStopRecording() {
+        try {
+            if (this.state.startRecording) {
+                var response = await utils.stopRecording(this.recordingId);
+                console.log(response.message);
+                if(response.message == "")
+                {
+                    this.setState({ startRecording: false });
+                }
+            } else {
+                if (this.call.state === 'Connected') {
+                    var serverCallId = await this.call.info.getServerCallId();
+                    var response = await utils.startRecording(serverCallId);
+                    console.log(response);
+                    this.recordingId = response.recordingId.recordingId;
+                    if(this.recordingId  != null && this.recordingId != '')
+                    {
+                        this.setState({ startRecording: true });
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     onSendDtmfTone = async(dtmfTone) => {
         console.log("sending DTMF Tone as ", dtmfTone);
         this.call.sendDtmf(dtmfTone);
@@ -706,6 +734,26 @@ export default class CallCard extends React.Component {
                                         <Icon iconName="Dialpad" />
                                     }
                                 </span>
+                                <span>
+                                    {(this.state.callState === 'Connected' ||
+                                    this.state.callState === 'LocalHold' ||
+                                    this.state.callState === 'RemoteHold') && 
+                                        <span className="in-call-button"
+                                        variant="secondary"
+                                        title={`${this.state.startRecording ? 'Stop Recording' : 'Start Recording'}`}
+                                        onClick={() => this.handleStartStopRecording()}>
+                                        {
+                                            this.state.startRecording &&
+                                            <Icon iconName="CircleFill" />
+                                        }
+                                        {
+                                            !this.state.startRecording &&
+                                            <Icon iconName="CircleStopSolid"  />
+                                        }
+                                    </span>
+                                }
+                                </span>
+                                
                                 <Panel type={PanelType.medium}
                                     isLightDismiss
                                     isOpen={this.state.showSettings}

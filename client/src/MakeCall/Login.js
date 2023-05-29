@@ -21,8 +21,8 @@ export default class Login extends React.Component {
         try {
             this.setState({ showSpinner: true, disableInitializeButton: true });
             this.userDetailsResponse = await utils.provisionNewUser();
-            this.setState({ id: utils.getIdentifierText(this.userDetailsResponse.user) });
-            await this.props.onLoggedIn({ id: this.state.id, token: this.userDetailsResponse.token, displayName: this.displayName, clientTag: this.clientTag });
+            this.setState({ id: this.userDetailsResponse.user.id});
+            await this.props.onLoggedIn({ id: this.state.id, token: this.userDetailsResponse.accessToken.token, displayName: this.displayName, clientTag: this.clientTag });
             this.setState({ loggedIn: true });
         } catch (error) {
             console.log(error);
