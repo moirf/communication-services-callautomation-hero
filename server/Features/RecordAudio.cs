@@ -14,7 +14,7 @@ namespace CallAutomationHero.Server
                     .GetCallConnectionProperties().Value.ServerCallId;
                 var startRecordingOptions = new StartRecordingOptions(new ServerCallLocator(serverCallId));
 
-                _ = Task.Run(async () => await client.GetCallRecording().StartRecordingAsync(startRecordingOptions));
+                _ = Task.Run(async () => await client.GetCallRecording().StartAsync(startRecordingOptions));
                 Logger.LogInformation("Successfully started recording");
             }
             catch(Exception ex)

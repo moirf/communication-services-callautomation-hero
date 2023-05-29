@@ -77,7 +77,7 @@ namespace CallAutomationHero.Server
                 {
                     //Perform operation as per DTMF tone recieved
                     var recognizeCompleted = (RecognizeCompleted)@event;
-                    CollectTonesResult collectedTones = (CollectTonesResult)recognizeCompleted.RecognizeResult;
+                    DtmfResult collectedTones = (DtmfResult)recognizeCompleted.RecognizeResult;
 
                     await PlayAudio.PlayAudioOperation(collectedTones.Tones[0], _configuration,
                        callConnection);
@@ -85,8 +85,7 @@ namespace CallAutomationHero.Server
                 if (@event is RecognizeFailed { OperationContext: "MainMenu" })
                 {
                     // play invalid audio
-                    await PlayAudio.PlayAudioToAll(new PlayOptions() { Loop = false }, PlayAudio.PlayAudioMessages.InvalidAudio, 
-                        _configuration,  callConnection);
+                    await PlayAudio.PlayAudioToAll(PlayAudio.PlayAudioMessages.InvalidAudio, _configuration,  callConnection, null);
                     _ = await callConnection.HangUpAsync(true);
                 }
                 if (@event is PlayCompleted { OperationContext: "SimpleIVR" })

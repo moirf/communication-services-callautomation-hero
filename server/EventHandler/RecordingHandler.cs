@@ -94,8 +94,8 @@ namespace CallAutomationHero.Server
                         RecordingChannel = RecordingChannel.Mixed,
                         RecordingFormat=RecordingFormat.Mp4
                     };
-                    var startRecordingResponse = await _callAutomationClient.GetCallRecording()
-                        .StartRecordingAsync(recordingOptions).ConfigureAwait(false);
+                    var startRecordingResponse = await _callAutomationClient.GetCallRecording().
+                        StartAsync(recordingOptions).ConfigureAwait(false);
 
                     Logger.LogInformation($"StartRecordingAsync response -- >  {startRecordingResponse.GetRawResponse()}, Recording Id: {startRecordingResponse.Value.RecordingId}");
 
@@ -128,7 +128,7 @@ namespace CallAutomationHero.Server
             {
                 if (!string.IsNullOrEmpty(recordingId))
                 {
-                    var stopRecording = await _callAutomationClient.GetCallRecording().StopRecordingAsync(recordingId).ConfigureAwait(false);
+                    var stopRecording = await _callAutomationClient.GetCallRecording().StopAsync(recordingId).ConfigureAwait(false);
                     Logger.LogInformation($"StopRecordingAsync response -- > {stopRecording}");
 
                     return Results.Ok();

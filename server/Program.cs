@@ -4,15 +4,12 @@ using CallAutomationHero.Server;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Azure.Communication.Identity;
-using Azure.Communication.CallAutomation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
 builder.Services.AddTransient<IncomingCallHandler>();
 builder.Services.AddTransient<RecordingHandler>();
 builder.Services.AddCors();
@@ -96,9 +93,9 @@ app.MapGet("/startRecording", async (
 /// <param name="serverCallId">Conversation id of the call</param>
 /// <param name="recordingId">Recording id of the call</param>
 /// <returns></returns>
-app.MapGet("/stopRecording", async(
-    ILogger < Program > logger,
-    [FromQuery]  string recordingId,
+app.MapGet("/stopRecording", async (
+    ILogger<Program> logger,
+    [FromQuery] string recordingId,
     RecordingHandler handler) =>
 {
     logger.LogInformation("recordingId" + recordingId);

@@ -33,24 +33,21 @@ namespace CallAutomationHero.Server
         public static async Task PlayAudioOperation(DtmfTone toneReceived, IConfiguration configuration, 
             CallConnection callConnection)
         {
-            var audioPlayOptions = new PlayOptions() { OperationContext = "SimpleIVR", Loop = false };
-
             if (toneReceived == DtmfTone.One)
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.SalesAudio, configuration, callConnection);
+                await PlayAudioToAll(PlayAudioMessages.SalesAudio, configuration, callConnection);
             }
             else if (toneReceived == DtmfTone.Two)
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.MarketingAudio, configuration, callConnection);
+                await PlayAudioToAll(PlayAudioMessages.MarketingAudio, configuration, callConnection);
             }
             else if (toneReceived == DtmfTone.Three)
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.CustomerCareAudio, configuration, callConnection);
+                await PlayAudioToAll(PlayAudioMessages.CustomerCareAudio, configuration, callConnection);
             }
             else if (toneReceived == DtmfTone.Four)
             {
-                audioPlayOptions.OperationContext = "AgentConnect";
-                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.AgentAudio, configuration, callConnection);
+                await PlayAudioToAll(PlayAudioMessages.AgentAudio, configuration, callConnection, "AgentConnect");
 
                 //var addParticipantOptions = new AddParticipantsOptions(new List<CommunicationIdentifier>()
                 //        {
@@ -60,7 +57,6 @@ namespace CallAutomationHero.Server
                 //    SourceCallerId = new PhoneNumberIdentifier(configuration["ACSAlternatePhoneNumber"])
                 //};
                 var AddParticipant = configuration["ParticipantToAdd"];
-                
 
                 var identifierKind = GetIdentifierKind(AddParticipant);
                 CallInvite? callInvite = null;
@@ -88,16 +84,17 @@ namespace CallAutomationHero.Server
             }
             else
             {
-                await PlayAudioToAll(audioPlayOptions, PlayAudioMessages.InvalidAudio, configuration, callConnection);
+                await PlayAudioToAll(PlayAudioMessages.InvalidAudio, configuration, callConnection);
             }
         }
 
-        public static async Task PlayAudioToAll(PlayOptions audioPlayOptions, PlayAudioMessages audioType, 
-            IConfiguration configuration, CallConnection callConnection)
+        public static async Task PlayAudioToAll(PlayAudioMessages audioType, 
+            IConfiguration configuration, CallConnection callConnection, string operationContext = "SimpleIVR")
         {
             var appBaseUri = configuration["AppBaseUri"];
-            PlaySource audioSource = new FileSource(new Uri(appBaseUri + configuration[audioType.ToString()]));
-            _ = await callConnection.GetCallMedia().PlayToAllAsync(audioSource, audioPlayOptions);
+            IEnumerable<PlaySource> audioSource = new PlaySource[] { new FileSource(new Uri(appBaseUri + configuration[audioType.ToString()])) };
+            var audioPlayOptions = new PlayToAllOptions(audioSource) {OperationContext = operationContext, Loop = false};
+            _ = await callConnection.GetCallMedia().PlayToAllAsync(audioPlayOptions);
         }
     }
     public enum CommunicationIdentifierKind
